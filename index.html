@@ -16,19 +16,28 @@
 <script>
 function send(){
   const input = document.getElementById("userInput").value;
-
   const script = document.createElement("script");
 
-  const url = "https://script.google.com/macros/s/AKfycbyzWjfNVKnG2kP4XvFkBRPtPGLg7iVUTlSYq0zd3D05fJ6UJa4FI5a_sccdhzxdA974/exec"
+  // 填入你"最新部署"的 GAS 網址
+  const baseUrl = "https://script.google.com/macros/s/AKfycbyzWjfNVKnG2kP4XvFkBRPtPGLg7iVUTlSYq0zd3D05fJ6UJa4FI5a_sccdhzxdA974/exec";
+  
+  // 加上時間戳 (&t=...) 強制瀏覽器發送新請求，避免抓到舊的快取資料
+  const url = baseUrl 
     + "?input=" + encodeURIComponent(input)
-    + "&callback=handleResponse";
+    + "&callback=handleResponse"
+    + "&t=" + new Date().getTime(); 
 
   script.src = url;
+  
+  // 載入執行完畢後，把 <script> 標籤拔掉保持 DOM 乾淨
+  script.onload = () => script.remove(); 
 
   document.body.appendChild(script);
 }
 
+// 接收 GAS 傳回的資料
 function handleResponse(data){
+  // 確保你的 GAS 回傳物件中有 output 這個 key
   document.getElementById("output").innerText = data.output;
 }
 </script>
