@@ -14,14 +14,21 @@
 <pre id="output"></pre>
 
 <script>
-async function send(){
+function send(){
   const input = document.getElementById("userInput").value;
 
-  const url = "https://script.google.com/macros/s/AKfycbyzWjfNVKnG2kP4XvFkBRPtPGLg7iVUTlSYq0zd3D05fJ6UJa4FI5a_sccdhzxdA974/exec?input=" + encodeURIComponent(input);
+  const script = document.createElement("script");
 
-  const res = await fetch(url);
-  const data = await res.json();
+  const url = "https://script.google.com/macros/s/AKfycbyzWjfNVKnG2kP4XvFkBRPtPGLg7iVUTlSYq0zd3D05fJ6UJa4FI5a_sccdhzxdA974/exec"
+    + "?input=" + encodeURIComponent(input)
+    + "&callback=handleResponse";
 
+  script.src = url;
+
+  document.body.appendChild(script);
+}
+
+function handleResponse(data){
   document.getElementById("output").innerText = data.output;
 }
 </script>
