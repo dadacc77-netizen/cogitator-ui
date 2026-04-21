@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<h2>COGITATOR ENGINE</h2>
+
+<input id="userInput" placeholder="輸入你現在的狀態" style="width:300px;">
+<button onclick="send()">送出</button>
+
+<pre id="output"></pre>
+
+<script>
+async function send(){
+  const input = document.getElementById("userInput").value;
+
+  const res = await fetch("你的GAS網址", {
+    method: "POST",
+    body: JSON.stringify({input})
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText = data.output;
+}
+</script>
+
+</body>
+</html>
