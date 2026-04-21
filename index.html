@@ -16,7 +16,7 @@
 async function send(){
   const input = document.getElementById("userInput").value;
 
-  const res = await fetch("你的GAS網址", {
+  const res = await fetch("https://script.google.com/macros/s/AKfycbyzWjfNVKnG2kP4XvFkBRPtPGLg7iVUTlSYq0zd3D05fJ6UJa4FI5a_sccdhzxdA974/exec", {
     method: "POST",
     body: JSON.stringify({input})
   });
