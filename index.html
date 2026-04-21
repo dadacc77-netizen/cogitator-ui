@@ -3,42 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <title>COGITATOR UI</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+    #output { background: #f4f4f4; padding: 15px; border-radius: 5px; white-space: pre-wrap; min-height: 50px; }
+    .loading { color: #666; font-style: italic; }
+  </style>
 </head>
 <body>
 
 <h2>COGITATOR ENGINE</h2>
 
-<input id="userInput" placeholder="輸入你現在的狀態" style="width:300px;">
-<button onclick="send()">送出</button>
+<input id="userInput" placeholder="輸入你現在的狀態" style="width:300px; padding: 5px;" 
+       onkeypress="if(event.key === 'Enter') send()">
+<button id="sendBtn" onclick="send()" style="padding: 5px 15px;">送出</button>
 
-<pre id="output"></pre>
+<pre id="output">等待指令中...</pre>
 
 <script>
 function send(){
-  const input = document.getElementById("userInput").value;
-  const script = document.createElement("script");
+  const inputEl = document.getElementById("userInput");
+  const outputEl = document.getElementById("output");
+  const btnEl = document.getElementById("sendBtn");
+  
+  const input = inputEl.value.trim();
+  if(!input) return; // 空白不送出
 
-  // 填入你"最新部署"的 GAS 網址
+  // 1. 顯示載入狀態
+  outputEl.innerText = "Engine Thinking...";
+  outputEl.classList.add("loading");
+  btnEl.disabled = true; // 防止重複點擊
+
+  const script = document.createElement("script");
   const baseUrl = "https://script.google.com/macros/s/AKfycbwqMGvnFTDLNAxdADlrHDfbMNlvocXgB5JDjdsCCoWx8HuzC0kF5aC5dC3HQG22wrat/exec";
   
-  // 加上時間戳 (&t=...) 強制瀏覽器發送新請求，避免抓到舊的快取資料
   const url = baseUrl 
     + "?input=" + encodeURIComponent(input)
     + "&callback=handleResponse"
     + "&t=" + new Date().getTime(); 
 
   script.src = url;
+  script.onerror = () => {
+    outputEl.innerText = "連線失敗，請檢查 GAS 部署網址或網路。";
+    btnEl.disabled = false;
+  };
   
-  // 載入執行完畢後，把 <script> 標籤拔掉保持 DOM 乾淨
-  script.onload = () => script.remove(); 
-
   document.body.appendChild(script);
+  
+  // 2. 清空輸入框
+  inputEl.value = "";
 }
 
-// 接收 GAS 傳回的資料
 function handleResponse(data){
-  // 確保你的 GAS 回傳物件中有 output 這個 key
-  document.getElementById("output").innerText = data.output;
+  const outputEl = document.getElementById("output");
+  const btnEl = document.getElementById("sendBtn");
+  
+  // 3. 顯示結果並恢復按鈕
+  outputEl.innerText = data.output;
+  outputEl.classList.remove("loading");
+  btnEl.disabled = false;
+
+  // 移除剛剛產生的 script 標籤
+  const scripts = document.querySelectorAll('script[src*="callback=handleResponse"]');
+  scripts.forEach(s => s.remove());
 }
 </script>
 
