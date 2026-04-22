@@ -3,180 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COGITATOR ENGINE V13.0</title>
+    <title>COGITATOR ENGINE V1.2</title>
     <style>
-        /* 品牌配色：Cream White (#FFF8E7) & Honey Yellow (#F2B705) */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            padding: 20px; 
-            background-color: #FFF8E7; 
-            display: flex;
-            justify-content: center;
-        }
-        .container { 
-            width: 100%;
-            max-width: 450px; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            border: 2px solid #F2B705;
-        }
-        h2 { color: #333; text-align: center; margin-bottom: 25px; letter-spacing: 1px; }
-        input { 
-            padding: 12px; margin: 10px 0; width: 100%; border-radius: 8px; 
-            border: 1px solid #ddd; box-sizing: border-box; font-size: 16px;
-        }
-        
-        /* 按鈕組佈局 */
-        .control-panel {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .main-btn { 
-            cursor: pointer; background-color: #F2B705; border: none; 
-            border-radius: 8px; font-weight: bold; padding: 15px; flex: 1;
-            font-size: 15px; transition: 0.3s; color: #000;
-        }
-        .main-btn:hover { background-color: #d9a404; }
-        .btn-secondary { background-color: #333; color: #fff; }
-        .btn-secondary:hover { background-color: #555; }
-        
-        #output { 
-            margin-top: 25px; padding: 20px; background: #fdfdfd; 
-            border-left: 5px solid #F2B705; min-height: 80px; 
-            border-radius: 4px; font-size: 17px; line-height: 1.6;
-            word-break: break-all;
-        }
-
-        /* 回饋區塊 */
-        .feedback-section { 
-            display: flex; gap: 15px; margin-top: 25px; opacity: 0.3; pointer-events: none;
-            transition: 0.5s;
-        }
+        body { font-family: sans-serif; padding: 20px; background-color: #FFF8E7; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 15px; border: 2px solid #F2B705; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h2 { color: #333; text-align: center; }
+        input { padding: 12px; margin: 10px 0; width: 100%; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        .main-btn { cursor: pointer; background-color: #F2B705; border: none; border-radius: 8px; font-weight: bold; padding: 15px; width: 100%; transition: 0.3s; }
+        #output { margin-top: 20px; padding: 15px; background: #fdfdfd; border-left: 5px solid #F2B705; min-height: 60px; border-radius: 4px; }
+        .feedback-section { display: flex; gap: 10px; margin-top: 20px; opacity: 0.3; pointer-events: none; transition: 0.5s; }
         .feedback-section.active { opacity: 1; pointer-events: auto; }
+        .btn-done { background-color: #4CAF50; color: white; flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-fail { background-color: #f44336; color: white; flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        .btn-done { background-color: #4CAF50; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-fail { background-color: #f44336; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        
-        .status-msg { text-align: center; font-size: 12px; color: #888; margin-top: 15px; min-height: 18px; }
+        /* 數據顯示區 */
+        .dashboard { margin-top: 20px; padding: 10px; border-top: 1px solid #eee; }
+        #behavior { font-weight: bold; color: #555; background: #fffbe6; padding: 8px; border-radius: 5px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>COGITATOR ENGINE</h2>
-    <input type="text" id="userInput" placeholder="輸入障礙或修圖指令...">
-    
-    <div class="control-panel">
-        <button class="main-btn" onclick="sendBehavior()">啟動行為導航</button>
-        <button class="main-btn btn-secondary" onclick="sendImagePrompt()">生成修圖 Prompt</button>
-    </div>
+    <input type="text" id="userInput" placeholder="現在的障礙是？">
+    <button class="main-btn" onclick="send()">啟動行為導航</button>
 
-    <div id="output">等待指令輸入...</div>
+    <div id="output">等待輸入狀態...</div>
 
     <div class="feedback-section" id="feedbackArea">
         <button class="btn-done" onclick="sendFeedback('DONE')">完成 (DONE)</button>
         <button class="btn-fail" onclick="sendFeedback('FAIL')">做不到 (FAIL)</button>
     </div>
-    
-    <div class="status-msg" id="statusMsg">系統已就緒</div>
+
+    <div class="dashboard">
+        <div id="behavior">🧠 行為偏好：計算中...</div>
+    </div>
 </div>
 
 <script>
-    // ⚠️ 請確保這是你最新部署的 GAS 網址
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwT1uStlbs35v8vgXrx6VBQxGoVUvknFiDdAJOuILuJFnZNK0PgqiR4mK8FTyyz7MeK/exec"; 
-
-    // 全域變數：存儲當前任務軌跡
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwqMGvnFTDLNAxdADlrHDfbMNlvocXgB5JDjdsCCoWx8HuzC0kF5aC5dC3HQG22wrat/exec"; 
     let lastSteps = { step1: "", step2: "", type: "" };
 
-    /**
-     * 1. 啟動行為導航 (Behavior Engine)
-     */
-    function sendBehavior() {
+    // 啟動載入
+    window.onload = () => {
+        loadBehavior();
+    };
+
+    function send() {
         const input = document.getElementById("userInput").value;
-        if(!input) return alert("請輸入障礙內容");
-
-        updateUIBeforeSend("正在運算物理動作...", "連線中...");
-        
-        callGasApi("generate", input, (data) => {
-            // 更新軌跡資料
-            lastSteps = { step1: data.step1, step2: data.step2, type: data.type };
-            
-            document.getElementById("output").innerHTML = `
-                <strong>Step 1：</strong>${data.step1}<br>
-                <strong>Step 2：</strong>${data.step2}
-            `;
-            
-            document.getElementById("feedbackArea").classList.add("active");
-            document.getElementById("statusMsg").innerText = "等待行為反饋...";
-        });
-    }
-
-    /**
-     * 2. 生成修圖 Prompt (Image Engine)
-     */
-    function sendImagePrompt() {
-        const input = document.getElementById("userInput").value;
-        if(!input) return alert("請輸入修圖需求");
-
-        updateUIBeforeSend("⚡ 正在優化圖像控制指令...", "轉譯中...");
-        document.getElementById("feedbackArea").classList.remove("active"); // 修圖不需要回饋
-
-        callGasApi("buildPrompt", input, (data) => {
-            document.getElementById("output").innerText = data.prompt;
-            document.getElementById("statusMsg").innerText = "Prompt 生成完成，可直接複製使用";
-        });
-    }
-
-    /**
-     * 3. 發送學習回饋 (Feedback Loop)
-     */
-    function sendFeedback(result) {
-        if (!lastSteps.step1) return;
-
-        document.getElementById("statusMsg").innerText = `正在紀錄 ${result}...`;
-        
-        const params = `&result=${result}&step1=${encodeURIComponent(lastSteps.step1)}&step2=${encodeURIComponent(lastSteps.step2)}&type=${lastSteps.type}&userId=user_k9m2x`;
-
-        callGasApi("feedback", params, (res) => {
-            if (res.status === "OK" || res === "OK") {
-                document.getElementById("statusMsg").innerText = "數據已成功寫入資料庫 ✅";
-                document.getElementById("feedbackArea").classList.remove("active");
-                document.getElementById("userInput").value = ""; 
-            } else {
-                document.getElementById("statusMsg").innerText = "寫入失敗 ❌";
-            }
-        }, true); // true 表示這是 rawParams 模式
-    }
-
-    /**
-     * 🧩 核心：通用 JSONP API 呼叫器
-     */
-    function callGasApi(action, inputOrParams, callbackFn, isRawParams = false) {
+        if(!input) return;
+        document.getElementById("output").innerHTML = "<em>運算中...</em>";
         const script = document.createElement("script");
-        const callbackName = "cb_" + Date.now() + Math.floor(Math.random() * 1000);
-        
-        // 註冊全域回調函式
-        window[callbackName] = function(data) {
-            callbackFn(data);
-            delete window[callbackName];
-            script.remove();
-        };
-
-        let url = `${GAS_URL}?action=${action}&callback=${callbackName}`;
-        url += isRawParams ? inputOrParams : `&input=${encodeURIComponent(inputOrParams)}`;
-
-        script.src = url;
+        script.src = `${GAS_URL}?action=generate&input=${encodeURIComponent(input)}&callback=handleResponse`;
         document.body.appendChild(script);
     }
 
-    function updateUIBeforeSend(outputTxt, statusTxt) {
-        document.getElementById("output").innerHTML = `<em>${outputTxt}</em>`;
-        document.getElementById("statusMsg").innerText = statusTxt;
+    function handleResponse(data) {
+        lastSteps = { step1: data.step1, step2: data.step2, type: data.type };
+        document.getElementById("output").innerHTML = `<strong>Step 1：</strong>${data.step1}<br><strong>Step 2：</strong>${data.step2}`;
+        document.getElementById("feedbackArea").classList.add("active");
+    }
+
+    function sendFeedback(result) {
+        const params = new URLSearchParams({
+            action: "feedback", result: result, step1: lastSteps.step1, step2: lastSteps.step2, type: lastSteps.type, userId: "user_k9m2x", callback: "feedbackCallback"
+        });
+        const script = document.createElement("script");
+        script.src = `${GAS_URL}?${params.toString()}`;
+        document.body.appendChild(script);
+    }
+
+    function feedbackCallback(res) {
+        if (res === "OK") {
+            document.getElementById("feedbackArea").classList.remove("active");
+            // 反饋成功後刷新統計與偏好
+            setTimeout(loadBehavior, 500);
+        }
+    }
+
+    // --- TASK V1.2：行為偏好顯示邏輯 ---
+
+    function loadBehavior() {
+        const script = document.createElement("script");
+        script.src = `${GAS_URL}?action=behavior&userId=user_k9m2x&callback=handleBehavior`;
+        document.body.appendChild(script);
+    }
+
+    function handleBehavior(data) {
+        let maxType = "mobile";
+        let maxValue = -1;
+
+        for (let key in data) {
+            if (data[key] > maxValue) {
+                maxValue = data[key];
+                maxType = key;
+            }
+        }
+
+        let label = "分析中";
+        if (maxType === "mobile") label = "📱 手機啟動型";
+        if (maxType === "writing") label = "✍️ 書寫啟動型";
+        if (maxType === "physical") label = "🧍 行動啟動型";
+
+        document.getElementById("behavior").innerHTML = `🧠 行為偏好：${label}`;
     }
 </script>
-
 </body>
 </html>
