@@ -1,66 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>COGITATOR UI</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-    #output { background: #f4f4f4; padding: 15px; border-radius: 5px; white-space: pre-wrap; min-height: 50px; }
-    .loading { color: #666; font-style: italic; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COGITATOR ENGINE V12.5</title>
+    <style>
+        /* 品牌配色：Cream White (#FFF8E7) & Honey Yellow (#F2B705) */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            background-color: #FFF8E7; 
+            display: flex;
+            justify-content: center;
+        }
+        .container { 
+            width: 100%;
+            max-width: 450px; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            border: 2px solid #F2B705;
+        }
+        h2 { color: #333; text-align: center; margin-bottom: 25px; letter-spacing: 1px; }
+        input { 
+            padding: 12px; margin: 10px 0; width: 100%; border-radius: 8px; 
+            border: 1px solid #ddd; box-sizing: border-box; font-size: 16px;
+        }
+        .main-btn { 
+            cursor: pointer; background-color: #F2B705; border: none; 
+            border-radius: 8px; font-weight: bold; padding: 15px; width: 100%;
+            font-size: 16px; transition: 0.3s;
+        }
+        .main-btn:hover { background-color: #d9a404; }
+        
+        #output { 
+            margin-top: 25px; padding: 20px; background: #fdfdfd; 
+            border-left: 5px solid #F2B705; min-height: 80px; 
+            border-radius: 4px; font-size: 18px; line-height: 1.6;
+        }
+
+        .feedback-section { 
+            display: flex; gap: 15px; margin-top: 25px; opacity: 0.3; pointer-events: none;
+            transition: 0.5s;
+        }
+        .feedback-section.active { opacity: 1; pointer-events: auto; }
+        
+        .btn-done { background-color: #4CAF50; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-fail { background-color: #f44336; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .status-msg { text-align: center; font-size: 12px; color: #888; margin-top: 15px; }
+    </style>
 </head>
 <body>
 
-<h2>COGITATOR ENGINE</h2>
+<div class="container">
+    <h2>COGITATOR ENGINE</h2>
+    <input type="text" id="userInput" placeholder="現在的障礙是？ (例：不想寫程式)">
+    <button class="main-btn" onclick="send()">啟動行為導航</button>
 
-<input id="userInput" placeholder="輸入你現在的狀態" style="width:300px; padding: 5px;" 
-       onkeypress="if(event.key === 'Enter') send()">
-<button id="sendBtn" onclick="send()" style="padding: 5px 15px;">送出</button>
+    <div id="output">等待輸入狀態...</div>
 
-<pre id="output">等待指令中...</pre>
+    <div class="feedback-section" id="feedbackArea">
+        <button class="btn-done" onclick="sendFeedback('DONE')">完成 (DONE)</button>
+        <button class="btn-fail" onclick="sendFeedback('FAIL')">做不到 (FAIL)</button>
+    </div>
+    
+    <div class="status-msg" id="statusMsg">系統已就緒</div>
+</div>
 
 <script>
-function send(){
-  const inputEl = document.getElementById("userInput");
-  const outputEl = document.getElementById("output");
-  const btnEl = document.getElementById("sendBtn");
-  
-  const input = inputEl.value.trim();
-  if(!input) return; // 空白不送出
+    // 你的 GAS 正式網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwT1uStlbs35v8vgXrx6VBQxGoVUvknFiDdAJOuILuJFnZNK0PgqiR4mK8FTyyz7MeK/exec"; 
 
-  // 1. 顯示載入狀態
-  outputEl.innerText = "Engine Thinking...";
-  outputEl.classList.add("loading");
-  btnEl.disabled = true; // 防止重複點擊
+    // 全域變數：存儲當前任務軌跡
+    let lastSteps = {
+        step1: "",
+        step2: "",
+        type: ""
+    };
 
-  const script = document.createElement("script");
-  const baseUrl = "https://script.google.com/macros/s/AKfycbwqMGvnFTDLNAxdADlrHDfbMNlvocXgB5JDjdsCCoWx8HuzC0kF5aC5dC3HQG22wrat/exec";
-  
-  const url = baseUrl 
-    + "?input=" + encodeURIComponent(input)
-    + "&callback=handleResponse"
-    + "&t=" + new Date().getTime(); 
+    // 1. 發送指令
+    function send() {
+        const input = document.getElementById("userInput").value;
+        if(!input) return;
 
-  script.src = url;
-  script.onerror = () => {
-    outputEl.innerText = "連線失敗，請檢查 GAS 部署網址或網路。";
-    btnEl.disabled = false;
-  };
-  
-  document.body.appendChild(script);
-  
-  // 2. 清空輸入框
-  inputEl.value = "";
-}
+        document.getElementById("output").innerHTML = "<em>正在運算物理動作...</em>";
+        document.getElementById("statusMsg").innerText = "連線中...";
 
-function handleResponse(data){
-  const outputEl = document.getElementById("output");
-  const btnEl = document.getElementById("sendBtn");
-  
-  // 3. 顯示結果並恢復按鈕
-  outputEl.innerText = data.output;
-  outputEl.classList.remove("loading");
-  btnEl.disabled = false;
+        const script = document.createElement("script");
+        script.src = `${GAS_URL}?action=generate&input=${encodeURIComponent(input)}&callback=handleResponse`;
+        document.body.appendChild(script);
+    }
+
+    // 2. 接收回應 (JSONP)
+    function handleResponse(data) {
+        // 同步到全域變數
+        lastSteps.step1 = data.step1;
+        lastSteps.step2 = data.step2;
+        lastSteps.type = data.type;
+
+        // 更新 UI
+        document.getElementById("output").innerHTML = `
+            <strong>Step 1：</strong>${data.step1}<br>
+            <strong>Step 2：</strong>${data.step2}
+        `;
+        
+        // 啟用反饋按鈕
+        document.getElementById("feedbackArea").classList.add("active");
+        document.getElementById("statusMsg").innerText = "等待行為反饋...";
+    }
+
+    // 3. 發送反饋 (DONE/FAIL)
+    function sendFeedback(result) {
+        if (!lastSteps.step1) return;
+
+        document.getElementById("statusMsg").innerText = `正在紀錄 ${result}...`;
+        
+        const script = document.createElement("script");
+        const params = new URLSearchParams({
+            action: "feedback",
+            result: result,
+            step1: lastSteps.step1,
+            step2: lastSteps.step2,
+            type: lastSteps.type,
+            userId: "user_k9m2x", // 預設 userId
+            callback: "feedbackCallback"
+        });
+
+        script.src = `${GAS_URL}?${params.toString()}`;
+        document.body.appendChild(script);
+    }
+
+    // 4. 反饋結果回傳
+    function feedbackCallback(res) {
+        if (res === "OK") {
+            document.getElementById("statusMsg").innerText = "數據已成功寫入資料庫 ✅";
+            document.getElementById("feedbackArea").classList.remove("active");
+            document.getElementById("userInput").value = ""; // 清空輸入框
+        } else {
+            document.getElementById("statusMsg").innerText = "寫入失敗，請檢查網路 ❌";
+        }
+    }
+</script>
+</body>
+</html>  btnEl.disabled = false;
 
   // 移除剛剛產生的 script 標籤
   const scripts = document.querySelectorAll('script[src*="callback=handleResponse"]');
