@@ -3,48 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COGITATOR ENGINE V1.2</title>
+    <title>COGITATOR ENGINE V12.5 HUD // DOOM PROTOCOL</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #FFF8E7; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 15px; border: 2px solid #F2B705; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h2 { color: #333; text-align: center; }
-        input { padding: 12px; margin: 10px 0; width: 100%; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        .main-btn { cursor: pointer; background-color: #F2B705; border: none; border-radius: 8px; font-weight: bold; padding: 15px; width: 100%; transition: 0.3s; }
-        #output { margin-top: 20px; padding: 15px; background: #fdfdfd; border-left: 5px solid #F2B705; min-height: 60px; border-radius: 4px; }
-        .feedback-section { display: flex; gap: 10px; margin-top: 20px; opacity: 0.3; pointer-events: none; transition: 0.5s; }
-        .feedback-section.active { opacity: 1; pointer-events: auto; }
-        .btn-done { background-color: #4CAF50; color: white; flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-fail { background-color: #f44336; color: white; flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* 深淵血腥網格基底 */
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            padding: 20px; 
+            background-color: #050505; 
+            background-image: 
+                linear-gradient(rgba(139, 0, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 0, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #FFFFFF; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 90vh;
+            margin: 0;
+            overflow: hidden;
+            animation: matrix-scroll 20s linear infinite;
+        }
+
+        @keyframes matrix-scroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100vh; }
+        }
+
+        /* DOOM 黑暗裝甲框架 */
+        .container { 
+            position: relative;
+            width: 100%; 
+            max-width: 500px; 
+            background: #0a0a0a; 
+            padding: 40px 30px; 
+            border: 4px solid #8B0000; /* 血腥紅裝甲邊緣 */
+            box-shadow: inset 0 0 30px rgba(139, 0, 0, 0.4), 0 0 30px rgba(0,0,0,0.9);
+            clip-path: polygon(5% 0, 95% 0, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0 95%, 0 5%);
+            animation: hud-boot 1.5s ease-out forwards;
+        }
+
+        @keyframes hud-boot {
+            0% { opacity: 0; transform: scale(0.95); filter: brightness(0.5); }
+            50% { opacity: 1; filter: brightness(1.2) drop-shadow(0 0 10px #8B0000); }
+            100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
+
+        /* 人類帝皇：帝國真理 */
+        .imperium-truth {
+            position: absolute;
+            top: 10px;
+            left: -10px;
+            background: #111;
+            border: 1px solid #FFFFFF;
+            padding: 4px 12px;
+            font-family: 'Times New Roman', serif;
+            color: #FFFFFF;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0px #8B0000;
+            z-index: 10;
+        }
+
+        /* 綠皮獸人：WAGHHHH (血腥塗鴉版) */
+        .ork-waghhh {
+            position: absolute;
+            bottom: -5px;
+            right: -15px;
+            background: #1a0505;
+            border: 3px dashed #FF0000;
+            padding: 5px 15px;
+            font-family: 'Impact', sans-serif;
+            color: #FFFFFF;
+            transform: rotate(-5deg);
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 3px 3px 0 #8B0000;
+            z-index: 10;
+        }
+
+        h2 { 
+            color: #FFFFFF; 
+            text-align: center; 
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+            border-bottom: 2px solid #8B0000;
+            padding-bottom: 10px;
+            letter-spacing: 4px;
+            margin-top: 0;
+        }
+
+        /* UID 輸入介面 */
+        input { 
+            padding: 15px; 
+            margin: 15px 0; 
+            width: 100%; 
+            background-color: #000;
+            color: #FFFFFF; 
+            border: 1px solid #8B0000; 
+            box-sizing: border-box; 
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            box-shadow: inset 0 0 15px rgba(139, 0, 0, 0.3);
+        }
         
+        input:focus {
+            outline: none;
+            border-color: #FF0000;
+            box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.6);
+        }
+
+        input::placeholder { color: #555; }
+
+        /* 觸發引擎按鈕 */
+        .main-btn { 
+            cursor: pointer; 
+            background-color: #8B0000; 
+            color: #FFFFFF;
+            border: 2px solid #FFFFFF; 
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold; 
+            padding: 15px; 
+            width: 100%; 
+            transition: 0.2s; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .main-btn:hover { 
+            background-color: #FF0000; 
+            color: #FFFFFF;
+            box-shadow: 0 0 20px #FF0000; 
+            border-color: #FF0000;
+        }
+
+        /* 輸出顯示區 */
+        #output { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #050000; 
+            border-left: 5px solid #8B0000; 
+            border-right: 5px solid #8B0000; 
+            color: #FFFFFF;
+            min-height: 60px; 
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: inset 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+
+        .feedback-section { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 20px; 
+            opacity: 0.3; 
+            pointer-events: none; 
+            transition: 0.5s; 
+        }
+        
+        .feedback-section.active { opacity: 1; pointer-events: auto; }
+        
+        .btn-done { 
+            background-color: #2b0000; 
+            color: #FFFFFF; 
+            flex: 1; 
+            padding: 12px; 
+            border: 1px solid #FF0000; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .btn-fail { 
+            background-color: #000000; 
+            color: #555; 
+            flex: 1; 
+            padding: 12px; 
+            border: 1px dashed #555; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .btn-done:hover { background-color: #8B0000; box-shadow: 0 0 15px #FF0000; }
+        .btn-fail:hover { background-color: #333; color: #FFF; border-color: #8B0000; }
+
         /* 數據顯示區 */
-        .dashboard { margin-top: 20px; padding: 10px; border-top: 1px solid #eee; }
-        #behavior { font-weight: bold; color: #555; background: #fffbe6; padding: 8px; border-radius: 5px; text-align: center; }
+        .dashboard { 
+            margin-top: 25px; 
+            padding: 15px 10px 5px 10px; 
+            border-top: 1px solid #330000; 
+        }
+        
+        #behavior { 
+            font-weight: bold; 
+            color: #FFFFFF; 
+            background: #110000; 
+            padding: 10px; 
+            text-align: center; 
+            border: 1px solid #8B0000;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px #FF0000;
+        }
+        
+        /* 掃描線特效 */
+        .scanline {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(255, 0, 0, 0.4);
+            opacity: 0.6;
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>COGITATOR ENGINE</h2>
-    <input type="text" id="userInput" placeholder="現在的障礙是？">
-    <button class="main-btn" onclick="send()">啟動行為導航</button>
+    <div class="scanline"></div>
+    <div class="imperium-truth">Imperium Truth // Purge the Weakness</div>
+    
+    <h2>COGITATOR ENGINE // DOOM</h2>
+    
+    <input type="text" id="userInput" placeholder="輸入當前障礙代碼...">
+    <button class="main-btn" onclick="send()">啟動行為殲滅 (ENGAGE)</button>
 
-    <div id="output">等待輸入狀態...</div>
+    <div id="output">SYSTEM STANDBY... 等待物理神經連結。</div>
 
     <div class="feedback-section" id="feedbackArea">
-        <button class="btn-done" onclick="sendFeedback('DONE')">完成 (DONE)</button>
-        <button class="btn-fail" onclick="sendFeedback('FAIL')">做不到 (FAIL)</button>
+        <button class="btn-done" onclick="sendFeedback('DONE')">執行確認 (GLORY)</button>
+        <button class="btn-fail" onclick="sendFeedback('FAIL')">系統排斥 (WEAK)</button>
     </div>
 
     <div class="dashboard">
-        <div id="behavior">🧠 行為偏好：計算中...</div>
+        <div id="behavior">⚙️ 行為矩陣：同步讀取中...</div>
     </div>
+    
+    <div class="ork-waghhh">WAGHHHH!! RIP AND TEAR!!</div>
 </div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwqMGvnFTDLNAxdADlrHDfbMNlvocXgB5JDjdsCCoWx8HuzC0kF5aC5dC3HQG22wrat/exec"; 
     let lastSteps = { step1: "", step2: "", type: "" };
 
-    // 啟動載入
     window.onload = () => {
         loadBehavior();
     };
@@ -52,7 +258,7 @@
     function send() {
         const input = document.getElementById("userInput").value;
         if(!input) return;
-        document.getElementById("output").innerHTML = "<em>運算中...</em>";
+        document.getElementById("output").innerHTML = "<em>[SYS] 計算血腥突觸路徑中...</em>";
         const script = document.createElement("script");
         script.src = `${GAS_URL}?action=generate&input=${encodeURIComponent(input)}&callback=handleResponse`;
         document.body.appendChild(script);
@@ -60,7 +266,7 @@
 
     function handleResponse(data) {
         lastSteps = { step1: data.step1, step2: data.step2, type: data.type };
-        document.getElementById("output").innerHTML = `<strong>Step 1：</strong>${data.step1}<br><strong>Step 2：</strong>${data.step2}`;
+        document.getElementById("output").innerHTML = `<strong style="color:#FF0000; text-shadow: 0 0 5px #FF0000;">Step 1：</strong>${data.step1}<br><br><strong style="color:#FF0000; text-shadow: 0 0 5px #FF0000;">Step 2：</strong>${data.step2}`;
         document.getElementById("feedbackArea").classList.add("active");
     }
 
@@ -76,12 +282,9 @@
     function feedbackCallback(res) {
         if (res === "OK") {
             document.getElementById("feedbackArea").classList.remove("active");
-            // 反饋成功後刷新統計與偏好
             setTimeout(loadBehavior, 500);
         }
     }
-
-    // --- TASK V1.2：行為偏好顯示邏輯 ---
 
     function loadBehavior() {
         const script = document.createElement("script");
@@ -101,11 +304,11 @@
         }
 
         let label = "分析中";
-        if (maxType === "mobile") label = "📱 手機啟動型";
-        if (maxType === "writing") label = "✍️ 書寫啟動型";
-        if (maxType === "physical") label = "🧍 行動啟動型";
+        if (maxType === "mobile") label = "📱 終端設備啟動型";
+        if (maxType === "writing") label = "✍️ 實體銘刻啟動型";
+        if (maxType === "physical") label = "🧍 物理裝甲行動型";
 
-        document.getElementById("behavior").innerHTML = `🧠 行為偏好：${label}`;
+        document.getElementById("behavior").innerHTML = `⚙️ 行為矩陣：${label}`;
     }
 </script>
 </body>
